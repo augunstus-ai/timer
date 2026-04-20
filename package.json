@@ -16,6 +16,15 @@
   "build": {
     "appId": "com.thousandhours.timer",
     "productName": "一千小时计时器",
+    "publish": null,
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    }
+  }
     "directories": {
       "output": "dist"
     },
