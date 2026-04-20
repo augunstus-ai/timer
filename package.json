@@ -1,0 +1,27 @@
+{
+  "name": "thousand-hours-timer",
+  "version": "1.0.0",
+  "description": "一千小时计时器",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1"
+  },
+  "build": {
+    "appId": "com.thousandhours.timer",
+    "productName": "一千小时计时器",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "icon.ico"
+    }
+  }
+}
