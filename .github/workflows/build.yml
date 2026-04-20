@@ -25,7 +25,7 @@ jobs:
         run: npm run build
 
       - name: 上传安装包
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: 一千小时计时器-安装包
           path: dist/*.exe
