@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>一千小时 · 计时器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: #1e1e2f;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .window {
+            width: 820px;
+            max-width: 100%;
+            background: #f5f5f7;
+            border-radius: 12px;
+            box-shadow: 0 30px 50px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            backdrop-filter: blur(2px);
+        }
+
+        .title-bar {
+            height: 48px;
+            background: #ececee;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            border-bottom: 1px solid #d1d1d6;
+            user-select: none;
+            -webkit-app-region: drag;  /* 可拖拽窗口 */
+        }
+
+        .traffic-lights {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+
+        .light {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: filter 0.15s;
+            box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.1);
+        }
+
+        .light:hover {
+            filter: brightness(0.9);
+        }
+
+        .close { background: #ff5f57; }
+        .minimize { background: #febc2e; }
+        .maximize { background: #28c840; }
+
+        .window-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #3a3a3c;
+            letter-spacing: 0.3px;
+        }
+
+        .spacer {
+            width: 60px;
+        }
+
+        .content {
+            padding: 24px 20px 28px;
+            -webkit-app-region: no-drag;
+        }
+
+        .timers-grid {
+            display: flex;
+            flex-direction: row;
+            gap: 12px;
+        }
+
+        .timer-card {
+            flex: 1;
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 16px 10px 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02), 0 0 0 0.5px rgba(0,0,0,0.03);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: box-shadow 0.2s;
+        }
+
+        .timer-card:hover {
+            box-shadow: 0 8px 18px rgba(0, 0, 0, 0.04), 0 0 0 0.5px rgba(0,0,0,0.05);
+        }
+
+        .timer-card:not(:last-child) {
+            border-right: 2px solid #e6e6ea;
+        }
+
+        .task-input {
+            width: 100%;
+            border: none;
+            background: #f9f9fb;
+            border-radius: 30px;
+            padding: 10px 8px;
+            font-size: 14px;
+            text-align: center;
+            color: #1c1c1e;
+            font-weight: 500;
+            outline: none;
+            margin-bottom: 16px;
+            border: 1px solid #e9e9ed;
+            transition: border 0.1s;
+        }
+
+        .task-input:focus {
+            border-color: #007aff;
+            background: #ffffff;
+        }
+
+        .task-input::placeholder {
+            color: #8e8e93;
+            font-weight: 400;
+            font-size: 12px;
+        }
+
+        .time-display {
+            font-size: 28px;
+            font-weight: 600;
+            font-variant-numeric: tabular-nums;
+            color: #1d1d1f;
+            background: #fbfbfd;
+            padding: 10px 0;
+            width: 100%;
+            text-align: center;
+            border-radius: 40px;
+            margin-bottom: 18px;
+            letter-spacing: 2px;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.02);
+            border: 0.5px solid #efeff1;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .timer-btn {
+            background: #f2f2f7;
+            border: none;
+            border-radius: 30px;
+            padding: 8px 0;
+            font-size: 14px;
+            font-weight: 500;
+            color: #007aff;
+            cursor: pointer;
+            flex: 1;
+            text-align: center;
+            transition: all 0.1s;
+            border: 0.5px solid #e1e1e6;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .timer-btn:hover {
+            background: #e9e9ef;
+        }
+
+        .timer-btn:active {
+            background: #d9d9e3;
+        }
+
+        .global-reset {
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .reset-all {
+            background: none;
+            border: none;
+            color: #8e8e93;
+            font-size: 13px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.1s;
+        }
+
+        .reset-all:hover {
+            background: #eaeaef;
+            color: #1c1c1e;
+        }
+
+        .footnote {
+            margin-top: 12px;
+            font-size: 11px;
+            color: #98989e;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="window">
+    <div class="title-bar">
+        <div class="traffic-lights">
+            <div class="light close" id="closeBtn" title="关闭"></div>
+            <div class="light minimize" id="minimizeBtn" title="最小化"></div>
+            <div class="light maximize" id="maximizeBtn" title="最大化"></div>
+        </div>
+        <div class="window-title">一千小时 · 计时器</div>
+        <div class="spacer"></div>
+    </div>
+
+    <div class="content">
+        <div class="timers-grid" id="timersGrid"></div>
+        <div class="global-reset">
+            <button class="reset-all" id="resetAllBtn">↻ 重置全部计时器</button>
+        </div>
+        <div class="footnote">计时自动保存 · 关闭窗口数据不丢失</div>
+    </div>
+</div>
+
+<script>
+    // 检查是否在 Electron 环境中
+    const isElectron = typeof require !== 'undefined';
+    const { ipcRenderer } = isElectron ? require('electron') : { ipcRenderer: null };
+
+    (function(){
+        "use strict";
+
+        const MAX_HOURS = 1000;
+        const STORAGE_KEY = 'thousandHoursTimers';
+
+        const DEFAULT_TIMERS = [
+            { name: '任务一', hours: 0, minutes: 0, seconds: 0, isRunning: false },
+            { name: '任务二', hours: 0, minutes: 0, seconds: 0, isRunning: false },
+            { name: '任务三', hours: 0, minutes: 0, seconds: 0, isRunning: false },
+            { name: '任务四', hours: 0, minutes: 0, seconds: 0, isRunning: false }
+        ];
+
+        let timers = [];
+        const timerElements = [];
+        let intervalIds = [null, null, null, null];
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    const parsed = JSON.parse(stored);
+                    if (Array.isArray(parsed) && parsed.length === 4) {
+                        timers = parsed;
+                        timers.forEach(t => { t.isRunning = false; });
+                        return;
+                    }
+                } catch (e) {}
+            }
+            timers = DEFAULT_TIMERS.map(t => ({ ...t }));
+        }
+
+        function saveToStorage() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(timers));
+        }
+
+        function formatTime(h, m, s) {
+            const hh = String(h).padStart(4, '0');
+            const mm = String(m).padStart(2, '0');
+            const ss = String(s).padStart(2, '0');
+            return `${hh}:${mm}:${ss}`;
+        }
+
+        function getTotalSeconds(index) {
+            const t = timers[index];
+            return t.hours * 3600 + t.minutes * 60 + t.seconds;
+        }
+
+        function setFromTotalSeconds(index, totalSec) {
+            const t = timers[index];
+            const maxTotal = MAX_HOURS * 3600;
+            let clamped = Math.min(totalSec, maxTotal);
+            
+            const hrs = Math.floor(clamped / 3600);
+            const mins = Math.floor((clamped % 3600) / 60);
+            const secs = clamped % 60;
+            
+            t.hours = hrs;
+            t.minutes = mins;
+            t.seconds = secs;
+        }
+
+        function updateDisplay(index) {
+            const t = timers[index];
+            const elements = timerElements[index];
+            if (!elements) return;
+
+            elements.timeDisplay.textContent = formatTime(t.hours, t.minutes, t.seconds);
+            
+            const btn = elements.toggleBtn;
+            btn.textContent = t.isRunning ? '暂停' : '开始';
+
+            if (elements.nameInput.value !== t.name) {
+                elements.nameInput.value = t.name;
+            }
+        }
+
+        function renderAll() {
+            const grid = document.getElementById('timersGrid');
+            grid.innerHTML = '';
+            timerElements.length = 0;
+
+            timers.forEach((timer, idx) => {
+                const card = document.createElement('div');
+                card.className = 'timer-card';
+
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.className = 'task-input';
+                input.placeholder = '任务名称';
+                input.value = timer.name;
+                input.maxLength = 20;
+
+                const timeDisplay = document.createElement('div');
+                timeDisplay.className = 'time-display';
+                timeDisplay.textContent = formatTime(timer.hours, timer.minutes, timer.seconds);
+
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'button-group';
+
+                const toggleBtn = document.createElement('button');
+                toggleBtn.className = 'timer-btn';
+                toggleBtn.textContent = timer.isRunning ? '暂停' : '开始';
+
+                btnGroup.appendChild(toggleBtn);
+                
+                card.appendChild(input);
+                card.appendChild(timeDisplay);
+                card.appendChild(btnGroup);
+                grid.appendChild(card);
+
+                timerElements[idx] = {
+                    nameInput: input,
+                    timeDisplay: timeDisplay,
+                    toggleBtn: toggleBtn
+                };
+
+                input.addEventListener('input', (e) => {
+                    timers[idx].name = e.target.value;
+                    saveToStorage();
+                });
+
+                toggleBtn.addEventListener('click', () => {
+                    const t = timers[idx];
+                    if (!t.isRunning) {
+                        const total = getTotalSeconds(idx);
+                        if (total >= MAX_HOURS * 3600) {
+                            alert('已达 1000 小时上限');
+                            return;
+                        }
+                        startTimer(idx);
+                    } else {
+                        pauseTimer(idx);
+                    }
+                    saveToStorage();
+                    updateDisplay(idx);
+                });
+            });
+
+            for (let i=0; i<4; i++) updateDisplay(i);
+        }
+
+        function startTimer(index) {
+            if (intervalIds[index] !== null) return;
+            
+            const t = timers[index];
+            t.isRunning = true;
+            
+            intervalIds[index] = setInterval(() => {
+                const currentTimer = timers[index];
+                if (!currentTimer.isRunning) {
+                    clearInterval(intervalIds[index]);
+                    intervalIds[index] = null;
+                    return;
+                }
+
+                let totalSec = getTotalSeconds(index);
+                const maxSec = MAX_HOURS * 3600;
+                
+                if (totalSec >= maxSec) {
+                    currentTimer.isRunning = false;
+                    clearInterval(intervalIds[index]);
+                    intervalIds[index] = null;
+                    updateDisplay(index);
+                    saveToStorage();
+                    return;
+                }
+
+                totalSec += 1;
+                setFromTotalSeconds(index, totalSec);
+                
+                saveToStorage();
+                updateDisplay(index);
+                
+                if (getTotalSeconds(index) >= maxSec) {
+                    currentTimer.isRunning = false;
+                    clearInterval(intervalIds[index]);
+                    intervalIds[index] = null;
+                    updateDisplay(index);
+                    saveToStorage();
+                }
+            }, 1000);
+        }
+
+        function pauseTimer(index) {
+            const t = timers[index];
+            t.isRunning = false;
+            if (intervalIds[index] !== null) {
+                clearInterval(intervalIds[index]);
+                intervalIds[index] = null;
+            }
+            saveToStorage();
+        }
+
+        function pauseAllTimers() {
+            for (let i=0; i<4; i++) {
+                if (timers[i].isRunning) {
+                    pauseTimer(i);
+                    updateDisplay(i);
+                }
+            }
+        }
+
+        function resetAllTimers() {
+            if (!confirm('确定重置全部四个计时器？数据将被清除。')) return;
+            for (let i=0; i<4; i++) {
+                if (intervalIds[i]) {
+                    clearInterval(intervalIds[i]);
+                    intervalIds[i] = null;
+                }
+            }
+            timers = DEFAULT_TIMERS.map(t => ({ ...t, isRunning: false }));
+            for (let i=0; i<4; i++) {
+                const el = timerElements[i];
+                if (el) {
+                    el.nameInput.value = timers[i].name;
+                    updateDisplay(i);
+                }
+            }
+            saveToStorage();
+        }
+
+        function setupWindowControls() {
+            const closeBtn = document.getElementById('closeBtn');
+            const minimizeBtn = document.getElementById('minimizeBtn');
+            const maximizeBtn = document.getElementById('maximizeBtn');
+
+            closeBtn.addEventListener('click', () => {
+                pauseAllTimers();
+                if (isElectron && ipcRenderer) {
+                    ipcRenderer.send('window-close');
+                } else {
+                    window.close();
+                }
+            });
+
+            minimizeBtn.addEventListener('click', () => {
+                if (isElectron && ipcRenderer) {
+                    ipcRenderer.send('window-minimize');
+                }
+            });
+
+            maximizeBtn.addEventListener('click', () => {
+                if (isElectron && ipcRenderer) {
+                    ipcRenderer.send('window-maximize');
+                }
+            });
+        }
+
+        window.addEventListener('beforeunload', () => {
+            pauseAllTimers();
+            saveToStorage();
+        });
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                pauseAllTimers();
+                for (let i=0; i<4; i++) updateDisplay(i);
+            }
+        });
+
+        function init() {
+            loadFromStorage();
+            renderAll();
+            setupWindowControls();
+
+            const resetBtn = document.getElementById('resetAllBtn');
+            resetBtn.addEventListener('click', resetAllTimers);
+        }
+
+        init();
+    })();
+</script>
+</body>
+</html>
