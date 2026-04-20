@@ -1,0 +1,31 @@
+name: Build Windows EXE
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 安装 Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: 安装依赖
+        run: npm install
+
+      - name: 打包 Windows EXE
+        run: npm run build
+
+      - name: 上传安装包
+        uses: actions/upload-artifact@v3
+        with:
+          name: 一千小时计时器-安装包
+          path: dist/*.exe
