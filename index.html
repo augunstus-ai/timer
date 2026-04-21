@@ -40,31 +40,54 @@
             padding: 0 16px;
             border-bottom: 1px solid #d1d1d6;
             user-select: none;
-            -webkit-app-region: drag;  /* 可拖拽窗口 */
+            -webkit-app-region: drag;
         }
-
-        .traffic-lights {
-            display: flex;
-            gap: 8px;
+        
+        /* 新增：整个窗口顶部区域都可拖拽 */
+        body {
+            -webkit-app-region: drag;
+        }
+        
+        /* 新增：内容区域不可拖拽，否则无法点击按钮 */
+        .content, .timer-card, input, button, .time-display, .reset-single {
             -webkit-app-region: no-drag;
         }
 
-        .light {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
+        .window-controls {
+            display: flex;
+            gap: 4px;
+            -webkit-app-region: no-drag;
+        }
+
+        .win-btn {
+            width: 46px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
-            transition: filter 0.15s;
-            box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.1);
+            color: #1d1d1f;
+            font-size: 16px;
+            transition: background 0.1s;
         }
 
-        .light:hover {
-            filter: brightness(0.9);
+        .win-btn:hover {
+            background: rgba(0, 0, 0, 0.06);
         }
 
-        .close { background: #ff5f57; }
-        .minimize { background: #febc2e; }
-        .maximize { background: #28c840; }
+        .win-btn.close-btn:hover {
+            background: #c42b1c;
+            color: white;
+        }
+
+        .win-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
 
         .window-title {
             font-size: 14px;
@@ -210,15 +233,39 @@
             color: #98989e;
             text-align: center;
         }
+
+        /* ===== 新增：单独重置按钮样式 ===== */
+        .reset-single {
+            background: transparent;
+            border: none;
+            color: #8e8e93;
+            font-size: 12px;
+            padding: 6px 0 2px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            transition: color 0.1s;
+            margin-top: 4px;
+        }
+
+        .reset-single:hover {
+            color: #ff3b30;
+        }
     </style>
 </head>
 <body>
 <div class="window">
     <div class="title-bar">
-        <div class="traffic-lights">
-            <div class="light close" id="closeBtn" title="关闭"></div>
-            <div class="light minimize" id="minimizeBtn" title="最小化"></div>
-            <div class="light maximize" id="maximizeBtn" title="最大化"></div>
+        <div class="window-controls">
+            <button class="win-btn" id="minimizeBtn" title="最小化">
+                <svg viewBox="0 0 12 12"><rect x="2" y="5" width="8" height="2"/></svg>
+            </button>
+            <button class="win-btn" id="maximizeBtn" title="最大化">
+                <svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
+            <button class="win-btn close-btn" id="closeBtn" title="关闭">
+                <svg viewBox="0 0 12 12"><line x1="3" y1="3" x2="9" y2="9" stroke="currentColor" stroke-width="1.5"/><line x1="9" y1="3" x2="3" y2="9" stroke="currentColor" stroke-width="1.5"/></svg>
+            </button>
         </div>
         <div class="window-title">一千小时 · 计时器</div>
         <div class="spacer"></div>
@@ -344,9 +391,15 @@
 
                 btnGroup.appendChild(toggleBtn);
                 
+                // 新增：创建单独重置按钮
+                const resetSingleBtn = document.createElement('button');
+                resetSingleBtn.className = 'reset-single';
+                resetSingleBtn.textContent = '↻ 重置';
+                
                 card.appendChild(input);
                 card.appendChild(timeDisplay);
                 card.appendChild(btnGroup);
+                card.appendChild(resetSingleBtn);  // 新增这一行
                 grid.appendChild(card);
 
                 timerElements[idx] = {
@@ -374,6 +427,21 @@
                     }
                     saveToStorage();
                     updateDisplay(idx);
+                });
+
+                resetSingleBtn.addEventListener('click', () => {
+                    if (!confirm(`确定重置"${timers[idx].name}"的计时进度？`)) return;
+                    
+                    if (timers[idx].isRunning) {
+                        pauseTimer(idx);
+                    }
+                    
+                    timers[idx].hours = 0;
+                    timers[idx].minutes = 0;
+                    timers[idx].seconds = 0;
+                    
+                    updateDisplay(idx);
+                    saveToStorage();
                 });
             });
 
